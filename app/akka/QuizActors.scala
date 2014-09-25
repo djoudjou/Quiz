@@ -43,12 +43,6 @@ object QuizActors {
         val sel = system.actorSelection("user/"+userToken)
         val future = sel.ask(Identify(None)).mapTo[ActorIdentity].map(_.ref)
     
-    /*
-    system.actorSelection("user/"+userToken).resolveOne().onComplete {
-      case Success(actor) => Some(actor)
-      case Failure(ex) => None
-    }
-    */  
         future
     }
     

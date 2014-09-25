@@ -9,11 +9,15 @@ case class User (
 	mail : String,
 	password : String)
 
+case class LoginUser (
+	mail : String,
+	password : String)
 
 object User {
 
   def save(user: User) {
     Logger.info("User saved: " + user.firstname)
   }
+
 
 }

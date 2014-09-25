@@ -4,7 +4,7 @@ import play.Project._
 
 object ApplicationBuild extends Build {
 
-  val appName         = "sse-chat-example"
+  val appName         = "quiz"
   val appVersion      = "1.0-SNAPSHOT"
 
   val appDependencies = Seq()

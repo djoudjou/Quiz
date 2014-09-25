@@ -5,7 +5,7 @@ import play.api.libs.json._
 import play.api.libs.json.Reads._
 import play.api.data.validation.ValidationError
 import play.api.libs.functional.syntax._
-import models.User
+import models._
 
 import scala.concurrent.Future
 import akka.pattern.ask
@@ -20,7 +20,6 @@ import akka.QuizActors
 
 object Users extends Controller {
 
-  // Define serialisation for JSON validation error messages.
   implicit val JsPathWrites = Writes[JsPath](p => JsString(p.toString))
 
   implicit val ValidationErrorWrites =
@@ -40,11 +39,12 @@ object Users extends Controller {
     (JsPath \ "mail").read[String](email andKeep minLength[String](2) andKeep maxLength[String](50)) and
     (JsPath \ "password").read[String](minLength[String](2) andKeep maxLength[String](50))
   )(User.apply _)
+  
+  implicit val loginReads: Reads[LoginUser] = (
+    (JsPath \ "mail").read[String](email andKeep minLength[String](2) andKeep maxLength[String](50)) and
+    (JsPath \ "password").read[String](minLength[String](2) andKeep maxLength[String](50))
+  )(LoginUser.apply _)
 
-  implicit val loginReads = (
-    (__ \ "mail").read[String] and
-    (__ \ "password").read[String]
-  ) tupled
 
   // needed to return async results
   import play.api.libs.concurrent.Execution.Implicits.defaultContext
@@ -56,6 +56,7 @@ object Users extends Controller {
             valid = { user =>
             
                 val future = QuizActors.createPlayerActor(user)
+                
                 
                 future.map {
                     case playerActor => 
@@ -71,32 +72,30 @@ object Users extends Controller {
     }
 
     def login = Action.async(parse.json) { implicit request =>
-        request.body.validate[(String, String)].map{ 
-            case (mail, password) => {
+        
+        val json = request.body
+        
+        json.validate[LoginUser].fold(
+            valid = { loginUser => 
+                val futureOpt = QuizActors.getPlayerActorByEmail(loginUser.mail)
                 
-                val future = QuizActors.getPlayerActorByEmail(mail).flatMap{
-                  playerActorOpt =>
-                    playerActorOpt.flatMap {
-                      playerActor => playerActor ? QuizActors.GetUser
+                futureOpt.map {
+                  case Some(playerActor) =>
+                    val futureOpt = playerActor.ask(QuizActors.GetUser).mapTo[User]
+                    futureOpt.map {
+						case Some(user) =>  
+						    val response = Json.obj("status" ->"OK", "message" -> ("Coucou "+ user.firstname) )
+                            Ok(response).withCookies(Cookie("session_key", user.firstname))
+                        case None => Unauthorized
                     }
+                  case None => Unauthorized
+                }.recover {
+                  case ex => Unauthorized
                 }
-                
-                future.map {
-                    case user => 
-                        if(user.password != password) {
-                            Unauthorized
-                        } else {
-                            val response = Json.obj("status" ->"OK", "message" -> ("Coucou "+ user.firstname) )
-                            Ok(response).withCookies(Cookie("session_key", playerActor.userToken))
-                        }
-                    
-                }.recover{
-                    case ex => Unauthorized
-                }
+            },invalid = {
+                errors => Future(BadRequest(Json.toJson(errors)))
             }
-        }.recoverTotal{
-            e => Future(BadRequest(Json.obj("status" ->"KO", "message" -> JsError.toFlatJson(e))))
-        }
+        )
     
     }
   
