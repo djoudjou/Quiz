@@ -11,6 +11,8 @@ GET     /chatFeed/:room             controllers.ChatApplication.chatFeed(room: S
 POST    /chat                       controllers.ChatApplication.postMessage
 
 POST    /api/user                   controllers.Users.create
+POST    /api/login                  controllers.Users.login
+
 
 
 # Map static resources from the /public folder to the /assets URL path

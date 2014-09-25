@@ -15,4 +15,5 @@ object User {
   def save(user: User) {
     Logger.info("User saved: " + user.firstname)
   }
+
 }
