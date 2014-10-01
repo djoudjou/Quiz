@@ -3,6 +3,7 @@ name := """quiz"""
 version := "1.0"
 
 //scalaVersion := "2.10.0"
+//scalaVersion := "2.11.1"
 
 libraryDependencies ++= Seq(
 "org.webjars" % "webjars-play_2.10" % "2.2.0",
@@ -23,5 +24,6 @@ Seq(
   scalaSource in Test <<= baseDirectory / "test",
   javaSource in Test <<= baseDirectory / "test",
   sourceDirectory in Test <<= baseDirectory / "test",
-  resourceDirectory in Compile <<= baseDirectory / "conf"
+  resourceDirectory in Compile <<= baseDirectory / "conf",
+  resourceDirectory in Compile <<= baseDirectory / "data"
 )

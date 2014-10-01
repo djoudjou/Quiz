@@ -12,7 +12,8 @@ import akka.pattern.ask
 import scala.util.{Success, Failure}
 
 import akka.QuizActors._
-
+// All Akka messages
+import akka.QuizProtocol._
 
 
 import akka.QuizActors
@@ -54,44 +55,48 @@ object Users extends Controller {
         
         json.validate[User].fold(
             valid = { user =>
-            
-                val future = QuizActors.createPlayerActor(user)
-                
-                
-                future.map {
-                    case playerActor => 
-                        val response = Json.obj("status" ->"OK", "message" -> ("${playerActor.user.name} Created") )
-                        Ok(response)
+                QuizActors.playerSupervisor.ask(CreatePlayer(user)).mapTo[UserCreationMessage].map {
+                    case AlreadyCreated(user) => 
+                      println(s"error AlreadyCreated ${user}")
+                      BadRequest(Json.obj("status" ->"KO", "message" -> s"${user.mail} deja utilisée" ))
+                    case UserCreated(createdUser) => 
+                      println(s"ok UserCreated ${user}")
+                      Status(201)(Json.obj("status" ->"OK", "message" -> (s"[${createdUser.firstname}] Created") ))
                 }.recover {
-                    case ex => BadRequest(Json.toJson(ex.getMessage))
+                    case ex => 
+                      println("error")
+                      BadRequest(Json.obj("status" ->"KO", "message" -> (ex.getMessage) ))
                 }
             },invalid = {
-                errors => Future(BadRequest(Json.toJson(errors)))
+                errors => 
+                  println("error")
+                  Future(BadRequest(Json.toJson(errors)))
             }
         )
     }
+
 
     def login = Action.async(parse.json) { implicit request =>
         
         val json = request.body
         
-        json.validate[LoginUser].fold(
+        json.validate[LoginUser].fold (
             valid = { loginUser => 
-                val futureOpt = QuizActors.getPlayerActorByEmail(loginUser.mail)
-                
-                futureOpt.map {
-                  case Some(playerActor) =>
-                    val futureOpt = playerActor.ask(QuizActors.GetUser).mapTo[User]
-                    futureOpt.map {
-						case Some(user) =>  
-						    val response = Json.obj("status" ->"OK", "message" -> ("Coucou "+ user.firstname) )
-                            Ok(response).withCookies(Cookie("session_key", user.firstname))
-                        case None => Unauthorized
-                    }
-                  case None => Unauthorized
+
+
+                QuizActors.playerSupervisor.ask(Login(loginUser)).mapTo[LoginMessage].map {
+                    case UnknownUser(loginUser) => Unauthorized(Json.obj("status" ->"KO", "message" -> s"${loginUser.mail} inconnu" ))
+                    
+                    case WrongPassword(loginUser) => Unauthorized(Json.obj("status" ->"KO", "message" -> (s"mauvais mot de passe") ))
+                    
+                    case AlreadyLoggedIn(user) => BadRequest(Json.obj("status" ->"KO", "message" -> (s"[${user.firstname}] déjà loggé") ))
+
+                    case LoggedIn(user) => Ok(Json.obj("status" ->"OK", "message" -> (s"[${user.firstname}] loggé") ))
+                                            .withCookies(Cookie("session_key", user.mail))
                 }.recover {
-                  case ex => Unauthorized
+                    case ex => BadRequest(Json.obj("status" ->"KO", "message" -> (ex.getMessage) ))
                 }
+                
             },invalid = {
                 errors => Future(BadRequest(Json.toJson(errors)))
             }

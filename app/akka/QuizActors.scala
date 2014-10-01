@@ -16,7 +16,10 @@ import scala.util.Random
 
 import models.User
 
+
+
 object QuizActors {
+    import akka.QuizProtocol._
 
     implicit val timeout = Timeout(5 seconds)
 
@@ -24,49 +27,76 @@ object QuizActors {
     
     /** Quiz actor system */
     val system = ActorSystem("quiz")
-    //val supervisor = system.actorOf(Props(new Supervisor()), "PlayerSupervisor")
+    val playerSupervisor = system.actorOf(Props(new PlayerSupervisor()), "PlayerSupervisor")
     
-    case class GetUser()
-    case class Login(userToken:String)
-    case class AskQuestion(numQuestion:Long)
-    case class Question(question:String,answer_1:String,answer_2:String,answer_3:String,answer_4:String)
-    case class Answer(numQuestion:Long,answer:String)
+    
     
     case class AlreadyCreateUserException() extends Exception("utilisateur déjà présent")
     
-    
-    def createUserTokenFromEmail(email:String) = new sun.misc.BASE64Encoder().encode(md.digest(email.getBytes))
-    
-    def getPlayerActorByEmail(email:String) : Future[Option[ActorRef]] = getPlayerActorByUserToken(createUserTokenFromEmail(email))
-    
-    def getPlayerActorByUserToken(userToken:String) : Future[Option[ActorRef]] = {
-        val sel = system.actorSelection("user/"+userToken)
-        val future = sel.ask(Identify(None)).mapTo[ActorIdentity].map(_.ref)
-    
-        future
-    }
-    
-    def createPlayerActor(user:User) : Future[ActorRef] = {
-        getPlayerActorByEmail(user.mail) map {
-            case Some(_) => throw new AlreadyCreateUserException
-            case None => 
-                println("create player")
-                val userToken = createUserTokenFromEmail(user.mail)
-                system.actorOf(Props(new Player(user,userToken)), userToken)
-        }
-
-    }
 }
 
 
-class Player(user: User, userToken:String) extends Actor with ActorLogging {
-  
-  def receive = {
-    case QuizActors.Login(userToken)  => 
-      log.info("user {} logged in",user.firstname)
+class PlayerSupervisor() extends Actor with ActorLogging {
+  import akka.QuizProtocol._
 
-    case QuizActors.GetUser => sender ! user
+    def createPlayerActorNameFromEmail(mail:String) = {
+        mail map { 
+            case '@' => '-'  
+            case '.' => '-'  
+            case c => c
+        }
+    }
+    
+    def getPlayerActorFromEmail(mail:String) = context.child(createPlayerActorNameFromEmail(mail))
+
+    def receive = {
+        case Login(loginUser)  => 
+            getPlayerActorFromEmail(loginUser.mail) match {
+                case Some(playerActor) => playerActor forward Login(loginUser)
+                case None => sender ! UnknownUser(loginUser)
+            }
+    
+        case CreatePlayer(user) => {
+            
+            getPlayerActorFromEmail(user.mail) match {
+                 case Some(_) => 
+                    sender ! AlreadyCreated(user)
+                    log.debug(s"user ${user} Déjà créé")
+                 case None => 
+                     val playerActor = context.actorOf(Props(new Player(user)),createPlayerActorNameFromEmail(user.mail))
+                     
+                     context.watch(playerActor)
+
+                     sender ! UserCreated(user)
+                     log.debug(s"user  ${user} créé")
+                 
+             }
+        }
   }
+} 
+
+
+class Player(user: User) extends Actor with ActorLogging {
+  import akka.QuizProtocol._
+
+  def receive = {
+    case Login(loginUser)  => 
+      if(loginUser.password != user.password){
+        log.debug(s"mauvais password")
+        sender ! WrongPassword(loginUser)
+      } else {
+          log.debug(s"user ${user.firstname} logged in success")
+          sender ! LoggedIn(user)
+          context become loggedIn
+      }
+  }
+
+  def loggedIn: Receive = {
+    case Login(loginUser)  => sender ! AlreadyLoggedIn(user)
+    case Answer(numQuestion,answer) => log.info(s"user %{user.firstname} answer ${answer} for question ${numQuestion}")
+  }
+
+
 } 
 
 

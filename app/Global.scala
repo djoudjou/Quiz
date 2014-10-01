@@ -1,13 +1,13 @@
-import akka.ChatActors
+import akka.QuizActors
 import play.api.GlobalSettings
 
 object Global extends GlobalSettings {
 
   override def onStart(application: play.api.Application) {
-    ChatActors
+    QuizActors
   }
   
   override def onStop(application: play.api.Application) { 
-    ChatActors.system.shutdown()
+    QuizActors.system.shutdown()
   }
 }

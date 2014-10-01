@@ -4,6 +4,9 @@
 # except for .gitignore
 !.gitignore
 
+/target
+/project
+
 # Ignore Play! working directory #
 db
 eclipse
