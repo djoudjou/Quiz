@@ -29,3 +29,6 @@ activator-sbt-idea-shim.sbt
 RUNING_PID
 
 public/scala-js/
+
+# Ignore Gatling result folder #
+injector/results
