@@ -4,6 +4,10 @@ import models._
 object QuizProtocol {
     
     sealed trait Message
+
+
+    sealed trait GameMessage extends Message
+    case class CreateGame(game:Game) extends GameMessage
     
     sealed trait UserCreationMessage extends Message
     
@@ -18,6 +22,8 @@ object QuizProtocol {
     case class AlreadyLoggedIn(user:User) extends LoginMessage
 	case class UnknownUser(loginUser:LoginUser) extends LoginMessage
 	case class WrongPassword(loginUser:LoginUser) extends LoginMessage
+
+    object LoginPhaseTimeout extends Message
 
 
     case class AskQuestion(numQuestion:Long) extends Message

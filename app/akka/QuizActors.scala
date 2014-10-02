@@ -14,7 +14,7 @@ import scala.concurrent.duration._
 import org.joda.time.DateTime
 import scala.util.Random
 
-import models.User
+import models._
 
 
 
@@ -28,16 +28,14 @@ object QuizActors {
     /** Quiz actor system */
     val system = ActorSystem("quiz")
     val playerSupervisor = system.actorOf(Props(new PlayerSupervisor()), "PlayerSupervisor")
-    
-    
-    
-    case class AlreadyCreateUserException() extends Exception("utilisateur déjà présent")
-    
+
 }
 
 
 class PlayerSupervisor() extends Actor with ActorLogging {
-  import akka.QuizProtocol._
+    import akka.QuizProtocol._
+
+    val game : Game =  Game.default
 
     def createPlayerActorNameFromEmail(mail:String) = {
         mail map { 
@@ -47,32 +45,49 @@ class PlayerSupervisor() extends Actor with ActorLogging {
         }
     }
     
-    def getPlayerActorFromEmail(mail:String) = context.child(createPlayerActorNameFromEmail(mail))
+    def getPlayerActorFromEmail(mail:String):Option[ActorRef] = context.child(createPlayerActorNameFromEmail(mail))
+
+    /* TODO
+    def initGamePhase: Receive = {
+        case 
+    }
+    */
+
+    def handleLoginMessage(loginUser:LoginUser,feedbackActor:ActorRef) = getPlayerActorFromEmail(loginUser.mail) match {
+                                                    case Some(playerActor) => playerActor forward Login(loginUser)
+                                                    case None => feedbackActor ! UnknownUser(loginUser)
+                                                  }
+    def handleCreatePlayerMessage(user:User,feedbackActor:ActorRef) = getPlayerActorFromEmail(user.mail) match { 
+                                                    case Some(playerActor) => 
+                                                        feedbackActor ! AlreadyCreated(user)
+                                                        log.debug(s"user ${user} Déjà créé")
+                                                    case None => 
+                                                        val playerActor = context.actorOf(Props(new Player(user)),createPlayerActorNameFromEmail(user.mail))
+                                                        context.watch(playerActor)
+                                                        feedbackActor ! UserCreated(user)
+                                                        log.debug(s"user ${user} créé")
+                                                  }
 
     def receive = {
         case Login(loginUser)  => 
-            getPlayerActorFromEmail(loginUser.mail) match {
-                case Some(playerActor) => playerActor forward Login(loginUser)
-                case None => sender ! UnknownUser(loginUser)
-            }
+          handleLoginMessage(loginUser,sender)
+          //context become loginPhase
+          
+          //implicit val ec = context.dispatcher
+          //context.system.scheduler.scheduleOnce(game.loginPhaseDuration, self, LoginPhaseTimeout)
     
-        case CreatePlayer(user) => {
-            
-            getPlayerActorFromEmail(user.mail) match {
-                 case Some(_) => 
-                    sender ! AlreadyCreated(user)
-                    log.debug(s"user ${user} Déjà créé")
-                 case None => 
-                     val playerActor = context.actorOf(Props(new Player(user)),createPlayerActorNameFromEmail(user.mail))
-                     
-                     context.watch(playerActor)
+        case CreatePlayer(user) => handleCreatePlayerMessage(user, sender)
+    }
 
-                     sender ! UserCreated(user)
-                     log.debug(s"user  ${user} créé")
-                 
-             }
-        }
-  }
+    def loginPhase : Receive = {
+      case Login(loginUser)  => handleLoginMessage(loginUser,sender)
+
+      case LoginPhaseTimeout => 
+            //sendQuestion(1)
+            //context become questionPhase
+            log.debug(s"LoginPhaseTimeout")
+    }
+
 } 
 
 

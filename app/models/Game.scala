@@ -1,19 +1,19 @@
 package models
 
 import play.api.Logger
-
+import scala.concurrent.duration._
 
 case class Parameters (
-	logintimeout : long,
-  synchrotime : long,
-  nbusersthreshold : long,
-  questiontimeframe : long,
-  nbquestions : long,
-  flushusertable : boolean,
+	logintimeout : Long,
+  synchrotime : Long,
+  nbusersthreshold : Long,
+  questiontimeframe : Long,
+  nbquestions : Long,
+  flushusertable : Boolean,
   trackeduseridmail : String)
 
 case class Question (
-  good_choice : long,
+  good_choice : Long,
 	label : String,
   answer_1 : String,
   answer_2 : String,
@@ -24,12 +24,23 @@ case class Question (
 
 
 
-case class Game(questions:List[Question],parameters:Parameters)
+case class Game(questions:List[Question],parameters:Parameters) {
+  def loginPhaseDuration = Duration(parameters.logintimeout,"seconds")
+}
 
 
 object Game {
 
-  val 20_questions = List(
+  val parameters = Parameters(
+    logintimeout = 10,
+    nbusersthreshold = 10,
+    questiontimeframe = 8,
+    synchrotime = 2,
+    nbquestions = 20,
+    flushusertable = false,
+    trackeduseridmail = "")
+
+  val _20_questions = List(
     Question(good_choice = 1, label = "question 1", answer_1 ="answer_1", answer_2 ="answer_2", answer_3 ="answer_3", answer_4 ="answer_4"),
     Question(good_choice = 2, label = "question 2", answer_1 ="answer_1", answer_2 ="answer_2", answer_3 ="answer_3", answer_4 ="answer_4"),
     Question(good_choice = 3, label = "question 3", answer_1 ="answer_1", answer_2 ="answer_2", answer_3 ="answer_3", answer_4 ="answer_4"),
@@ -49,8 +60,8 @@ object Game {
     Question(good_choice = 1, label = "question 17", answer_1 ="answer_1", answer_2 ="answer_2", answer_3 ="answer_3", answer_4 ="answer_4"),
     Question(good_choice = 2, label = "question 18", answer_1 ="answer_1", answer_2 ="answer_2", answer_3 ="answer_3", answer_4 ="answer_4"),
     Question(good_choice = 3, label = "question 19", answer_1 ="answer_1", answer_2 ="answer_2", answer_3 ="answer_3", answer_4 ="answer_4"),
-    Question(good_choice = 4, label = "question 20", answer_1 ="answer_1", answer_2 ="answer_2", answer_3 ="answer_3", answer_4 ="answer_4"),
+    Question(good_choice = 4, label = "question 20", answer_1 ="answer_1", answer_2 ="answer_2", answer_3 ="answer_3", answer_4 ="answer_4")
     )
 
-  def default = 
+  def default = Game(_20_questions,parameters)
 }

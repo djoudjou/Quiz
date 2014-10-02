@@ -64,12 +64,12 @@ object Users extends Controller {
                       Status(201)(Json.obj("status" ->"OK", "message" -> (s"[${createdUser.firstname}] Created") ))
                 }.recover {
                     case ex => 
-                      println("error")
+                      println(s"error ${ex}")
                       BadRequest(Json.obj("status" ->"KO", "message" -> (ex.getMessage) ))
                 }
             },invalid = {
                 errors => 
-                  println("error")
+                  println(s"error ${errors}")
                   Future(BadRequest(Json.toJson(errors)))
             }
         )
@@ -85,20 +85,32 @@ object Users extends Controller {
 
 
                 QuizActors.playerSupervisor.ask(Login(loginUser)).mapTo[LoginMessage].map {
-                    case UnknownUser(loginUser) => Unauthorized(Json.obj("status" ->"KO", "message" -> s"${loginUser.mail} inconnu" ))
+                    case UnknownUser(loginUser) => 
+                        println(s"UnknownUser ${loginUser}")
+                        Unauthorized(Json.obj("status" ->"KO", "message" -> s"${loginUser.mail} inconnu" ))
                     
-                    case WrongPassword(loginUser) => Unauthorized(Json.obj("status" ->"KO", "message" -> (s"mauvais mot de passe") ))
+                    case WrongPassword(loginUser) => 
+                        println(s"WrongPassword ${loginUser}")
+                        Unauthorized(Json.obj("status" ->"KO", "message" -> (s"mauvais mot de passe") ))
                     
-                    case AlreadyLoggedIn(user) => BadRequest(Json.obj("status" ->"KO", "message" -> (s"[${user.firstname}] déjà loggé") ))
+                    case AlreadyLoggedIn(user) => 
+                        println(s"error AlreadyLoggedIn ${user}")
+                        BadRequest(Json.obj("status" ->"KO", "message" -> (s"[${user.firstname}] déjà loggé") ))
 
-                    case LoggedIn(user) => Ok(Json.obj("status" ->"OK", "message" -> (s"[${user.firstname}] loggé") ))
-                                            .withCookies(Cookie("session_key", user.mail))
+                    case LoggedIn(user) => 
+                        println(s"LoggedIn ${user}")
+                        Ok(Json.obj("status" ->"OK", "message" -> (s"[${user.firstname}] loggé") ))
+                          .withCookies(Cookie("session_key", user.mail))
                 }.recover {
-                    case ex => BadRequest(Json.obj("status" ->"KO", "message" -> (ex.getMessage) ))
+                    case ex => 
+                        println(s"error ${ex}")
+                        BadRequest(Json.obj("status" ->"KO", "message" -> (ex.getMessage) ))
                 }
                 
             },invalid = {
-                errors => Future(BadRequest(Json.toJson(errors)))
+                errors => 
+                    println(s"error ${errors}")
+                    Future(BadRequest(Json.toJson(errors)))
             }
         )
     
