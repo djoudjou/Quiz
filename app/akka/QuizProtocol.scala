@@ -22,11 +22,24 @@ object QuizProtocol {
     case class AlreadyLoggedIn(user:User) extends LoginMessage
 	case class UnknownUser(loginUser:LoginUser) extends LoginMessage
 	case class WrongPassword(loginUser:LoginUser) extends LoginMessage
+    object OutOfLoginPhase extends LoginMessage
 
-    object LoginPhaseTimeout extends Message
+    sealed trait TimeoutMessage extends Message
+    object LoginPhaseTimeout extends TimeoutMessage
+    object QuestionTimeout extends TimeoutMessage
+    object SynchroTimeout extends TimeoutMessage
 
 
-    case class AskQuestion(numQuestion:Long) extends Message
-    case class Question(question:String,answer_1:String,answer_2:String,answer_3:String,answer_4:String) extends Message
-    case class Answer(numQuestion:Long,answer:String) extends Message
+    sealed trait QuestionMessage extends Message
+    case class AskQuestion(mail:String,numQuestion:Long) extends QuestionMessage
+    case class Question(question:String,answer_1:String,answer_2:String,answer_3:String,answer_4:String,score:Long) extends QuestionMessage
+    case class Answer(mail:String, numQuestion:Long,answer:String) extends QuestionMessage
+    case class AnswerStatus(are_u_right : Boolean, good_answer : String, score : Long) extends QuestionMessage
+
+    case class ComputeAnswer(numQuestion: Long, answer: String, expectedAnswer: String) extends QuestionMessage
+
+    case class WrongQuestion() extends QuestionMessage
+    case class WrongAnswerNumber() extends QuestionMessage
+    case class AnswerOverTimeLimit() extends QuestionMessage
+    case class AlreadySubmittedAnswer() extends QuestionMessage
   }

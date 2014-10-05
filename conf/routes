@@ -12,6 +12,7 @@ POST    /chat                       controllers.ChatApplication.postMessage
 
 POST    /api/user                   controllers.Users.create
 POST    /api/login                  controllers.Users.login
+GET     /api/question/:num          controllers.Users.question(num: Long)
 
 
 

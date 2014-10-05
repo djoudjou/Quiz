@@ -97,6 +97,10 @@ object Users extends Controller {
                         println(s"error AlreadyLoggedIn ${user}")
                         BadRequest(Json.obj("status" ->"KO", "message" -> (s"[${user.firstname}] déjà loggé") ))
 
+                    case OutOfLoginPhase =>
+                        println(s"error Phase de loggin terminé")
+                        BadRequest(Json.obj("status" ->"KO", "message" -> (s"phase de connexion terminé") ))                    
+
                     case LoggedIn(user) => 
                         println(s"LoggedIn ${user}")
                         Ok(Json.obj("status" ->"OK", "message" -> (s"[${user.firstname}] loggé") ))
@@ -113,6 +117,42 @@ object Users extends Controller {
                     Future(BadRequest(Json.toJson(errors)))
             }
         )
+    
+    }
+
+
+
+
+    def question(numeroQuestion:Long) = Action.async{ implicit request =>
+        
+        val optionCookieMail : Option[Cookie] = request.cookies.get("session_key")
+
+
+        optionCookieMail match {
+          case None => 
+              println(s"Clé de session non reconnue")
+              Future(Unauthorized(Json.obj("status" ->"KO", "message" -> s"Clé de session non reconnue" )))
+
+          case Some(cookieMail) =>
+              val mail = cookieMail.value
+              println(s"Clé de session ${mail}")
+              val askQuestion = AskQuestion(mail,numeroQuestion)
+              
+              QuizActors.playerSupervisor.ask(askQuestion).mapTo[QuestionMessage].map {
+                  case Question(question,answer_1,answer_2,answer_3,answer_4,score) =>
+                      Ok(Json.obj(
+                          "question" -> question, 
+                          "answer_1" -> answer_1, 
+                          "answer_2" -> answer_2,
+                          "answer_3" -> answer_3, 
+                          "answer_4" -> answer_4, 
+                          "score" -> score ))
+
+                  case WrongQuestion() =>
+                      BadRequest(Json.obj("status" ->"KO", "message" -> (s"mauvais numéro de question") ))
+
+              }
+        }
     
     }
   
