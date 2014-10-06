@@ -1,4 +1,4 @@
-﻿<?xml version="1.0" encoding="UTF-8"?>
+<?xml version="1.0" encoding="UTF-8"?>
 <configuration>
 
 	<appender name="CONSOLE" class="ch.qos.logback.core.ConsoleAppender">
@@ -12,6 +12,8 @@
 	<!-- 	<logger name="io.gatling.http" level="TRACE" /> -->
 	<!-- Uncomment for logging ONLY FAILED HTTP request and responses -->
 	<!-- 	<logger name="io.gatling.http" level="DEBUG" /> -->
+	
+	<logger name="akka" level="DEBUG" />
 
 	<root level="DEBUG">
 		<appender-ref ref="CONSOLE" />
