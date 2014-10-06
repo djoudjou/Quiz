@@ -80,7 +80,7 @@ class PlayerSupervisor() extends Actor with ActorLogging {
 
     def handleAskQuestion(mail:String, numQuestion: Long,feedbackActor:ActorRef) = {
         if(numQuestion!=currentQuestion + 1) {
-            feedbackActor ! WrongQuestion()
+            feedbackActor ! WrongQuestion
         } else {
             addWaiter(mail,feedbackActor)
         }
@@ -88,7 +88,7 @@ class PlayerSupervisor() extends Actor with ActorLogging {
 
     def handleAnswer(mail: String, numQuestion : Long, answer:String, feedbackActor:ActorRef) = {
         if(numQuestion!=currentQuestion) {
-          feedbackActor ! WrongAnswerNumber()
+          feedbackActor ! WrongAnswerNumber
         } else {
           getPlayerActorFromEmail(mail) match {
               case Some(playerActor) => playerActor forward ComputeAnswer(numQuestion, answer, game.getQuestion(currentQuestion).good_choice)

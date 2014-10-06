@@ -138,7 +138,7 @@ object Users extends Controller {
               println(s"Clé de session ${mail}")
               val askQuestion = AskQuestion(mail,numeroQuestion)
               
-              QuizActors.playerSupervisor.ask(askQuestion).mapTo[QuestionMessage].map {
+              QuizActors.playerSupervisor.ask(askQuestion).mapTo[AskQuestionAnswerMessage].map {
                   case Question(question,answer_1,answer_2,answer_3,answer_4,score) =>
                       Ok(Json.obj(
                           "question" -> question, 
@@ -148,7 +148,7 @@ object Users extends Controller {
                           "answer_4" -> answer_4, 
                           "score" -> score ))
 
-                  case WrongQuestion() =>
+                  case WrongQuestion =>
                       BadRequest(Json.obj("status" ->"KO", "message" -> (s"mauvais numéro de question") ))
 
               }
