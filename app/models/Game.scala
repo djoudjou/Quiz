@@ -43,7 +43,7 @@ case class Game(questions:List[QuestionDetail],parameters:Parameters) {
 object Game {
 
   val parameters = Parameters(
-    logintimeout = 20,
+    logintimeout = 30,
     nbusersthreshold = 10,
     //questiontimeframe = 5,
     questiontimeframe = 10,
