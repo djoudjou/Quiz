@@ -19,9 +19,10 @@ object QuizProtocol {
 
     case class Login(loginUser:LoginUser) extends Message
     case class LoggedIn(user:User) extends LoginMessage
+    case class ErrorLoggedIn(loginUser:LoginUser) extends LoginMessage
     case class AlreadyLoggedIn(user:User) extends LoginMessage
-	case class UnknownUser(loginUser:LoginUser) extends LoginMessage
-	case class WrongPassword(loginUser:LoginUser) extends LoginMessage
+	  case class UnknownUser(loginUser:LoginUser) extends LoginMessage
+	  case class WrongPassword(loginUser:LoginUser) extends LoginMessage
     object OutOfLoginPhase extends LoginMessage
 
     sealed trait TimeoutMessage extends Message

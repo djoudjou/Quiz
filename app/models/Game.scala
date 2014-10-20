@@ -1,7 +1,6 @@
 package models
 
-import play.api.Logger
-import scala.concurrent.duration._
+import scala.concurrent.duration.Duration
 
 case class Parameters (
 	logintimeout : Long,

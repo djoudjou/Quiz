@@ -2,13 +2,14 @@ name := """quiz"""
 
 version := "1.0"
 
-//scalaVersion := "2.10.0"
+scalaVersion := "2.10.0"
 //scalaVersion := "2.11.1"
 
 libraryDependencies ++= Seq(
 "org.webjars" % "webjars-play_2.10" % "2.2.0",
   "org.webjars" % "angularjs" % "1.1.5-1",
   "org.webjars" % "bootstrap" % "2.3.2",
+  "org.reactivecouchbase" %% "reactivecouchbase-core" % "0.2",
   "org.scalatest" %% "scalatest" % "1.9.1" % "test",
   "junit" % "junit" % "4.11" % "test",
   "com.novocode" % "junit-interface" % "0.7" % "test->default"
@@ -27,3 +28,5 @@ Seq(
   resourceDirectory in Compile <<= baseDirectory / "conf",
   resourceDirectory in Compile <<= baseDirectory / "data"
 )
+
+resolvers += "ReactiveCouchbase Releases" at "https://raw.github.com/ReactiveCouchbase/repository/master/releases/"
