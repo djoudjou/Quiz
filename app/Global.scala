@@ -8,12 +8,6 @@ import com.typesafe.config.{Config, ConfigFactory}
 object Global extends GlobalSettings {
 
   override def onStart(application: play.api.Application) {
-    println("Hello")
-    import com.typesafe.config.ConfigFactory
-    val config = ConfigFactory.load()
-    println(config)
-    println(config.getObjectList("couchbase.buckets"))
-
     QuizActors
     Model
   }

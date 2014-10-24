@@ -1,41 +1,21 @@
 package akka
 
 import akka.actor._
-import endpoint.FrontEndPoint
-import org.reactivecouchbase.client.OpResult
-import scala.concurrent.Future
-import akka.pattern.ask
-import akka.util.Timeout
-
-import play.api.libs.concurrent.Execution.Implicits.defaultContext
-import play.api.libs.json._
-
-import scala.language.postfixOps
-import scala.concurrent.duration._
-
-import org.joda.time.DateTime
-import scala.util.Random
-
-import models._
+import akka.cluster.ClusterEvent._
+import akka.cluster.{Cluster, Member, MemberStatus}
+import akka.contrib.pattern.ClusterSingletonProxy
+import models.{QuestionDetail, User, LoginUser, Game}
 
 
-object QuizActors {
+class FrontEndActor extends Actor with ActorLogging {
+  import akka.ClusterProtocol._
 
-  import akka.QuizProtocol._
-
-  implicit val timeout = Timeout(600 seconds)
-
-
-  val frontendActor = FrontEndPoint.startFrontend(0)
-
-  /** Quiz actor system */
-  //val system = ActorSystem("quiz")
-  //val playerSupervisor = system.actorOf(Props(new PlayerSupervisor()), "PlayerSupervisor")
-
-}
+  val masterProxy = context.actorOf(ClusterSingletonProxy.props(
+    singletonPath = "/user/master/active",
+    role = Some("backend")),
+    name = "masterProxy")
 
 
-class PlayerSupervisor() extends Actor with ActorLogging {
 
   import akka.QuizProtocol._
 
@@ -204,10 +184,4 @@ class PlayerSupervisor() extends Actor with ActorLogging {
 
 
   def receive = initPhase
-
 }
-
-
-
-
-

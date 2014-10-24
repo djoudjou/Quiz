@@ -2,13 +2,15 @@ name := """quiz"""
 
 version := "1.0"
 
-scalaVersion := "2.10.0"
+scalaVersion := "2.10.4"
 //scalaVersion := "2.11.1"
 
 libraryDependencies ++= Seq(
 "org.webjars" % "webjars-play_2.10" % "2.2.0",
   "org.webjars" % "angularjs" % "1.1.5-1",
   "org.webjars" % "bootstrap" % "2.3.2",
+  "com.typesafe.akka" %% "akka-contrib" % "2.3.6",
+  "com.typesafe.akka" %% "akka-testkit" % "2.3.6",
   "org.reactivecouchbase" %% "reactivecouchbase-core" % "0.2",
   "org.scalatest" %% "scalatest" % "1.9.1" % "test",
   "junit" % "junit" % "4.11" % "test",
@@ -16,6 +18,7 @@ libraryDependencies ++= Seq(
 )
 
 testOptions += Tests.Argument(TestFrameworks.JUnit, "-v")
+
 
 // Note: These settings are defaults for Activator but can be changed.
 Seq(
@@ -25,8 +28,7 @@ Seq(
   scalaSource in Test <<= baseDirectory / "test",
   javaSource in Test <<= baseDirectory / "test",
   sourceDirectory in Test <<= baseDirectory / "test",
-  resourceDirectory in Compile <<= baseDirectory / "conf",
-  resourceDirectory in Compile <<= baseDirectory / "data"
+  resourceDirectory in Compile <<= baseDirectory / "conf"
 )
 
 resolvers += "ReactiveCouchbase Releases" at "https://raw.github.com/ReactiveCouchbase/repository/master/releases/"

@@ -30,7 +30,7 @@ object Model {
   // get a driver instance driver
   val driver = ReactiveCouchbaseDriver()
   // get the default bucket
-  val bucket = driver.bucket("default")
+  val bucket = driver.bucket("quiz")
 
   def shutdown(): Unit = {
     // shutdown the driver (only at app shutdown)

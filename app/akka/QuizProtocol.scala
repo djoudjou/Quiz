@@ -5,7 +5,6 @@ object QuizProtocol {
     
     sealed trait Message
 
-
     sealed trait GameMessage extends Message
     case class CreateGame(game:Game) extends GameMessage
     
