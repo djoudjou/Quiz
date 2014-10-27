@@ -32,3 +32,4 @@ public/scala-js/
 
 # Ignore Gatling result folder #
 injector/results
+*.class
