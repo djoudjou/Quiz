@@ -30,4 +30,6 @@ JAVA_OPTS="-server -XX:+UseThreadPriorities -XX:ThreadPriorityPolicy=42 -Xms512M
 
 CLASSPATH="$GATLING_HOME/lib/*:$GATLING_CONF:$GATLING_HOME/src/main/scala:${JAVA_CLASSPATH}"
 
+echo "CLASSPATH is set to ${CLASSPATH}"
+
 java $JAVA_OPTS -cp "$CLASSPATH" io.gatling.app.Gatling "$@"

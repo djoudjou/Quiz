@@ -1,22 +1,18 @@
 package controllers
 
-import play.api.mvc._
-import play.api.libs.json._
-import play.api.libs.json.Reads._
+import akka.QuizActors._
+import akka.pattern.ask
+import models._
 import play.api.data.validation.ValidationError
 import play.api.libs.functional.syntax._
-import models._
+import play.api.libs.json.Reads._
+import play.api.libs.json._
+import play.api.mvc._
 
 import scala.concurrent.Future
-import akka.pattern.ask
-import scala.util.{Success, Failure}
-
-import akka.QuizActors._
 // All Akka messages
-import akka.QuizProtocol._
-
-
 import akka.QuizActors
+import akka.QuizProtocol._
 
 
 object Users extends Controller {
@@ -52,10 +48,13 @@ object Users extends Controller {
   
     def create = Action.async(parse.json) { implicit request =>
         val json = request.body
-        
+
+        println(s"do ${json}")
+
         json.validate[User].fold(
             valid = { user =>
-                QuizActors.playerSupervisor.ask(CreatePlayer(user)).mapTo[UserCreationMessage].map {
+              Future(BadRequest(Json.obj("status" ->"KO", "message" -> "HELLO" )))
+              QuizActors.masterProxy.ask(CreatePlayer(user)).mapTo[UserCreationMessage].map {
                     case AlreadyCreated(user) => 
                       println(s"error AlreadyCreated ${user}")
                       BadRequest(Json.obj("status" ->"KO", "message" -> s"${user.mail} deja utilisée" ))
@@ -84,7 +83,7 @@ object Users extends Controller {
             valid = { loginUser => 
 
 
-                QuizActors.playerSupervisor.ask(Login(loginUser)).mapTo[LoginMessage].map {
+                QuizActors.masterProxy.ask(Login(loginUser)).mapTo[LoginMessage].map {
                     case UnknownUser(loginUser) => 
                         println(s"UnknownUser ${loginUser}")
                         Unauthorized(Json.obj("status" ->"KO", "message" -> s"${loginUser.mail} inconnu" ))
@@ -121,9 +120,7 @@ object Users extends Controller {
     }
 
 
-
-
-    def question(numeroQuestion:Long) = Action.async{ implicit request =>
+    def question(numQuestion:Long) = Action.async{ implicit request =>
         
         val optionCookieMail : Option[Cookie] = request.cookies.get("session_key")
 
@@ -136,9 +133,9 @@ object Users extends Controller {
           case Some(cookieMail) =>
               val mail = cookieMail.value
               println(s"Clé de session ${mail}")
-              val askQuestion = AskQuestion(mail,numeroQuestion)
+              val askQuestion = AskQuestion(mail,numQuestion)
               
-              QuizActors.playerSupervisor.ask(askQuestion).mapTo[AskQuestionAnswerMessage].map {
+              QuizActors.masterProxy.ask(askQuestion).mapTo[AskQuestionAnswerMessage].map {
                   case Question(question,answer_1,answer_2,answer_3,answer_4,score) =>
                       Ok(Json.obj(
                           "question" -> question, 
@@ -155,5 +152,5 @@ object Users extends Controller {
         }
     
     }
-  
+
 }

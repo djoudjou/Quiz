@@ -1,29 +1,34 @@
 package models
 
-import play.api.Logger
-import scala.concurrent.ExecutionContext.Implicits.global
 import org.reactivecouchbase.ReactiveCouchbaseDriver
+import org.reactivecouchbase.client.OpResult
+
+import scala.concurrent.ExecutionContext.Implicits.global
 
 // import the implicit JsObject reader and writer
 
-import org.reactivecouchbase.CouchbaseRWImplicits.documentAsJsObjectReader
-import org.reactivecouchbase.CouchbaseRWImplicits.jsObjectToDocumentWriter
-import scala.concurrent.Future
 import play.api.libs.json._
+
+import scala.concurrent.Future
 
 
 case class User(firstname: String, lastname: String, mail: String, password: String) {
   override def toString = s"$firstname $lastname"
 }
 
+case class LoginUser(mail: String, password: String) {
+  override def toString = s"$mail"
+}
+
+
 case class Player(user:User, log:Boolean=false) {
+  //var score: Long = 0
+  //var answers = IndexedSeq.empty[PlayerHistory]
+
   override def toString = s"$user log=$log"
 }
 
 
-case class LoginUser(mail: String, password: String) {
-  override def toString = s"$mail"
-}
 
 
 object Model {
@@ -44,27 +49,12 @@ object Player {
   implicit val userFmt = Json.format[User]
   implicit val playerFmt = Json.format[Player]
 
-  def save(player: Player)  = {
+  def save(player: Player) : Future[OpResult]  = {
     Model.bucket.set[Player](player.user.mail, player)
   }
 
   def findByMail(mail: String): Future[Option[Player]] = {
-    /*
-    bucket.get[User](mail).map { opt =>
-      println(opt.map(person => s"Found John : ${person}").getOrElse("Cannot find object with key 'john-doe'"))
-    }
-    */
     Model.bucket.get[Player](mail)
   }
-
-  //
-  //  def fromString(line:String) : User = {
-  //    val tokens = line.split(",").toList
-  //    User(firstname = tokens(0)
-  //      ,lastname = tokens(1)
-  //      ,mail = tokens(2)
-  //      ,password = tokens(3))
-  //  }
-
 
 }

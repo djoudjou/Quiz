@@ -1,4 +1,5 @@
 package akka
+
 import models._
 
 object QuizProtocol {

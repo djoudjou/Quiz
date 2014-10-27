@@ -1,9 +1,6 @@
-import akka.QuizActors
-import org.reactivecouchbase.Configuration
-import org.reactivecouchbase.client.ReactiveCouchbaseException
 import play.api.GlobalSettings
+import akka._
 import models._
-import com.typesafe.config.{Config, ConfigFactory}
 
 object Global extends GlobalSettings {
 
